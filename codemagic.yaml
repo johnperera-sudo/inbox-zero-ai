@@ -4,10 +4,15 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      xcode: latest
+      xcode: 16.2
+      cocoapods: default
     scripts:
+      - name: List files
+        script: |
+          ls -R | head -n 100
       - name: Build iOS
         script: |
-          xcodebuild -project InboxZeroAI.xcodeproj -scheme InboxZeroAI -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          xcodebuild -project InboxZeroAI.xcodeproj -scheme InboxZeroAI -sdk iphoneos -configuration Debug build CODE_SIGNING_ALLOWED=NO
     artifacts:
-      - build/**
+      - build/**/*.app
+      - build/**/*.ipa
