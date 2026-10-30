@@ -46,7 +46,7 @@ class PaywallManager: ObservableObject {
         }
     }
     
-    func purchase(package: Package) async throws {
+    func purchase(package: Package) async throws -> Bool {
         return try await withCheckedThrowingContinuation { continuation in
             Purchases.shared.purchase(package: package) { transaction, customerInfo, error, userCancelled in
                 if let error = error {
@@ -54,23 +54,22 @@ class PaywallManager: ObservableObject {
                     return
                 }
                 if userCancelled {
-                    continuation.resume(throwing: NSError(domain: "Purchase", code: 1, userInfo: [NSLocalizedDescriptionKey: "User cancelled"]))
+                    continuation.resume(returning: false)
                     return
                 }
                 let isActive = customerInfo?.entitlements[self.entitlement]?.isActive == true
                 DispatchQueue.main.async {
                     self.isPro = isActive
                 }
-                continuation.resume()
+                continuation.resume(returning: isActive)
             }
         }
     }
     
-    // If PaywallView uses purchase() without parameter, also add this:
-    func purchase() async throws {
+    func purchase() async throws -> Bool {
         guard let package = offerings?.current?.availablePackages.first else {
             throw NSError(domain: "Purchase", code: 2, userInfo: [NSLocalizedDescriptionKey: "No packages available"])
         }
-        try await purchase(package: package)
+        return try await purchase(package: package)
     }
 }
