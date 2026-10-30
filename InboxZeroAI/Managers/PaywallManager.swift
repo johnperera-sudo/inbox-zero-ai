@@ -34,8 +34,8 @@ class PaywallManager: ObservableObject {
         actionCount += 1
     }
     
-    func incrementAction() {
-        increment()
+    func shouldShowPaywall() -> Bool {
+        return !isPro && actionCount >= FREE_LIMIT
     }
     
     func restorePurchases() async throws -> Bool {
