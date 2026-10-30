@@ -80,7 +80,7 @@ struct InboxView: View {
         HStack(spacing: 6) {
             Image(systemName: filter?.icon ?? "tray")
                 .font(.system(size: 11, weight: .semibold))
-            Text(filter.title)
+            Text(filter?.title ?? "")
                 .font(.system(size: 13, weight: .semibold))
             Button {
                 withAnimation { filter = nil }
