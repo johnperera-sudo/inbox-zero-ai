@@ -30,6 +30,14 @@ class PaywallManager: ObservableObject {
         }
     }
     
+    func increment() {
+        actionCount += 1
+    }
+    
+    func incrementAction() {
+        increment()
+    }
+    
     func restorePurchases() async throws -> Bool {
         return try await withCheckedThrowingContinuation { continuation in
             Purchases.shared.restorePurchases { customerInfo, error in
