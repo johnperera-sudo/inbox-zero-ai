@@ -1,18 +1,42 @@
 workflows:
-  ios-workflow:
+  iOS Free Build:
     name: iOS Free Build
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
+      groups:
+        - codemagic
+      vars:
+        XCODE_PROJECT: "InboxZeroAI.xcodeproj"
+        XCODE_SCHEME: "InboxZeroAI"
       xcode: 16.2
-      cocoapods: default
+    triggering:
+      events:
+        - push
     scripts:
-      - name: List files
+      - name: Set up code signing (disabled for free build)
         script: |
-          ls -R | head -n 100
-      - name: Build iOS
+          echo "CODE_SIGNING_ALLOWED=NO"
+      - name: Build iOS app
         script: |
-          xcodebuild -project InboxZeroAI.xcodeproj -scheme InboxZeroAI -sdk iphoneos -configuration Debug build CODE_SIGNING_ALLOWED=NO
+          set -e
+          set -x
+          xcodebuild -project "$XCODE_PROJECT"             -scheme "$XCODE_SCHEME"             -configuration Debug             -sdk iphoneos             -derivedDataPath $HOME/derived_data             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO             CODE_SIGN_IDENTITY=""             AD_HOC_CODE_SIGNING_ALLOWED=YES             build
+      - name: Create IPA from .app
+        script: |
+          set -e
+          set -x
+          APP_PATH=$(find $HOME/derived_data/Build/Products -name "InboxZeroAI.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
+          ls -lh "$APP_PATH"
+          # Create Payload folder and IPA
+          rm -rf Payload InboxZeroAI.ipa
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r InboxZeroAI.ipa Payload
+          rm -rf Payload
+          ls -lh InboxZeroAI.ipa
+          echo "IPA created successfully!"
     artifacts:
-      - build/**/*.app
-      - build/**/*.ipa
+      - InboxZeroAI.ipa
+      - $HOME/derived_data/Build/Products/**/*.app
