@@ -78,7 +78,7 @@ struct InboxView: View {
 
     private var filterChip: some View {
         HStack(spacing: 6) {
-            Image(systemName: filter?.icon ?? "tray"))
+            Image(systemName: filter?.icon ?? "tray")
                 .font(.system(size: 11, weight: .semibold))
             Text(filter.title)
                 .font(.system(size: 13, weight: .semibold))
