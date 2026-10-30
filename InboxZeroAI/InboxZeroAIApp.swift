@@ -1,5 +1,5 @@
 import SwiftUI
-
+import RevenueCat
 @main
 struct InboxZeroAIApp: App {
     @StateObject private var store = MailboxStore()
