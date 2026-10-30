@@ -5,6 +5,7 @@ import RevenueCat
 class PaywallManager: ObservableObject {
     @Published var isPro = false
     @Published var offerings: Offerings?
+    @Published var actionCount: Int = 0
     
     let FREE_LIMIT = 50
     let entitlement = "pro"
@@ -28,6 +29,48 @@ class PaywallManager: ObservableObject {
             }
         }
     }
+    
+    func restorePurchases() async throws -> Bool {
+        return try await withCheckedThrowingContinuation { continuation in
+            Purchases.shared.restorePurchases { customerInfo, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                let isActive = customerInfo?.entitlements[self.entitlement]?.isActive == true
+                DispatchQueue.main.async {
+                    self.isPro = isActive
+                }
+                continuation.resume(returning: isActive)
+            }
+        }
+    }
+    
+    func purchase(package: Package) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            Purchases.shared.purchase(package: package) { transaction, customerInfo, error, userCancelled in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                if userCancelled {
+                    continuation.resume(throwing: NSError(domain: "Purchase", code: 1, userInfo: [NSLocalizedDescriptionKey: "User cancelled"]))
+                    return
+                }
+                let isActive = customerInfo?.entitlements[self.entitlement]?.isActive == true
+                DispatchQueue.main.async {
+                    self.isPro = isActive
+                }
+                continuation.resume()
+            }
+        }
+    }
+    
+    // If PaywallView uses purchase() without parameter, also add this:
+    func purchase() async throws {
+        guard let package = offerings?.current?.availablePackages.first else {
+            throw NSError(domain: "Purchase", code: 2, userInfo: [NSLocalizedDescriptionKey: "No packages available"])
+        }
+        try await purchase(package: package)
+    }
 }
-
-
